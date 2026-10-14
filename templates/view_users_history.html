@@ -1,0 +1,492 @@
+{% include "headers.html" %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User History - VisionToCode</title>
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    <style>
+        /* Page specific styles */
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 0;
+            margin-bottom: 40px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .page-header h2 {
+            margin: 0;
+            font-weight: 600;
+            color: white;
+        }
+
+        .page-header p {
+            margin: 10px 0 0 0;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filter-section .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .filter-section .form-control {
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-section .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+
+        .table thead th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            background: #667eea;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .title-badge {
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-block;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .date-badge {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: inline-block;
+            color: #495057;
+        }
+
+        .type-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .type-badge.python {
+            background: #306998;
+            color: white;
+        }
+
+        .type-badge.html {
+            background: #e34c26;
+            color: white;
+        }
+
+        .type-badge.flutter {
+            background: #02569b;
+            color: white;
+        }
+
+        .type-badge.ai {
+            background: #8e44ad;
+            color: white;
+        }
+
+        .type-badge.default {
+            background: #6c757d;
+            color: white;
+        }
+
+        .image-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid #dee2e6;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+            color: white;
+        }
+
+        /* DataTables custom styling */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 20px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 8px 15px;
+            margin-left: 10px;
+            outline: none;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 8px;
+            margin: 0 2px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #667eea;
+            color: white !important;
+            border: none;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #764ba2;
+            color: white !important;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+
+        /* Modal for image preview */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+
+        .modal-image {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 10px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filter-section .col-md-4 {
+                margin-bottom: 15px;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-history me-2"></i>User History</h2>
+        <p>View and track all user activities and submissions</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="fromDate" class="form-label">
+                    <i class="fas fa-calendar-alt me-1"></i> From Date
+                </label>
+                <input type="date" id="fromDate" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="toDate" class="form-label">
+                    <i class="fas fa-calendar-alt me-1"></i> To Date
+                </label>
+                <input type="date" id="toDate" class="form-control">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-secondary" id="clearFilters" style="border-radius: 10px;">
+                    <i class="fas fa-eraser me-1"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="table table-hover" id="historyTable">
+                <thead>
+                    <tr>
+                        <th style="width: 70px">#</th>
+                        <th style="width: 180px">User</th>
+                        <th style="width: 200px">Title</th>
+                        <th style="width: 120px">Date</th>
+                        <th style="width: 80px">Image</th>
+                        <th style="width: 100px">Code File</th>
+                        <th style="width: 120px">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in data %}
+                    <tr>
+                        <td class="text-center"><strong>{{ forloop.counter }}</strong></td>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    {{ i.CUSTOMER.name|slice:":1"|upper }}
+                                </div>
+                                <span class="user-name">{{ i.CUSTOMER.name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="title-badge">
+                                <i class="fas fa-tag me-1"></i>{{ i.title }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="date-badge">
+                                <i class="fas fa-calendar-day me-1"></i>{{ i.date }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if i.image %}
+                                <img src="{{ i.image }}" class="image-preview" alt="Preview" onclick="showImage(this.src)">
+                            {% else %}
+                                <i class="fas fa-image fa-2x text-muted"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if i.code_file %}
+                                <a href="{{ i.code_file }}" download class="btn btn-download">
+                                    <i class="fas fa-download me-1"></i> Download
+                                </a>
+                            {% else %}
+                                <span class="text-muted">
+                                    <i class="fas fa-file-alt"></i> No file
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if i.type == "Python" %}
+                                <span class="type-badge python">
+                                    <i class="fab fa-python"></i> Python
+                                </span>
+                            {% elif i.type == "HTML" %}
+                                <span class="type-badge html">
+                                    <i class="fab fa-html5"></i> HTML
+                                </span>
+                            {% elif i.type == "Flutter" %}
+                                <span class="type-badge flutter">
+                                    <i class="fab fa-android"></i> Flutter
+                                </span>
+                            {% elif i.type == "AI/ML" %}
+                                <span class="type-badge ai">
+                                    <i class="fas fa-brain"></i> AI/ML
+                                </span>
+                            {% else %}
+                                <span class="type-badge default">
+                                    <i class="fas fa-code"></i> {{ i.type }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-folder-open"></i>
+                            <p class="mb-0">No history records found</p>
+                            <small class="text-muted">User submissions will appear here</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal" onclick="closeModal()">
+    <span class="close-modal">&times;</span>
+    <img class="modal-image" id="modalImage">
+</div>
+
+<!-- Scripts -->
+<script>
+    function showImage(src) {
+        var modal = document.getElementById('imageModal');
+        var modalImg = document.getElementById('modalImage');
+        modal.style.display = "block";
+        modalImg.src = src;
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = "none";
+    }
+
+    $(document).ready(function () {
+        {% if data %}
+        var table = $('#historyTable').DataTable({
+            language: {
+                search: "<i class='fas fa-search'></i> Search:",
+                searchPlaceholder: "Search by user, title...",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "No entries found",
+                infoFiltered: "(filtered from _MAX_ total entries)",
+                paginate: {
+                    first: "<i class='fas fa-angle-double-left'></i>",
+                    last: "<i class='fas fa-angle-double-right'></i>",
+                    next: "<i class='fas fa-angle-right'></i>",
+                    previous: "<i class='fas fa-angle-left'></i>"
+                },
+                zeroRecords: "No matching records found"
+            },
+            pageLength: 10,
+            order: [[3, 'desc']], // Sort by date descending
+            columnDefs: [
+                { orderable: false, targets: [4, 5] } // Disable sorting on image and download columns
+            ]
+        });
+
+        // Date filter function
+        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+            var min = document.getElementById('fromDate').value;
+            var max = document.getElementById('toDate').value;
+            var dateStr = data[3]; // Date column index
+            var date = new Date(dateStr);
+
+            var minDate = min ? new Date(min) : null;
+            var maxDate = max ? new Date(max) : null;
+
+            if ((!minDate || date >= minDate) && (!maxDate || date <= maxDate)) {
+                return true;
+            }
+            return false;
+        });
+
+        // Apply filter on date change
+        $('#fromDate, #toDate').on('change', function () {
+            table.draw();
+        });
+
+        // Clear filters
+        $('#clearFilters').on('click', function () {
+            $('#fromDate').val('');
+            $('#toDate').val('');
+            table.draw();
+        });
+        {% endif %}
+
+        // Add Font Awesome if not already loaded
+        if (typeof document.createElement('link').href === 'undefined') {
+            var fontAwesome = document.createElement('link');
+            fontAwesome.rel = 'stylesheet';
+            fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+            document.head.appendChild(fontAwesome);
+        }
+    });
+</script>
+
+{% include "footer.html" %}
